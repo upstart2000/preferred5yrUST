@@ -4,13 +4,13 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import dateutil.relativedelta as rd
 
-# --- 1. VERIFIED HARD DATA ---
+# --- 1. VERIFIED HARD DATA (NO ASSUMPTIONS) ---
 FTR_DATA = {
     'AGNCL':  {'spread': 0.0570,  'reset': '10/15/2027', 'yahoo': 'AGNCL',   'coupon': 0.0775,  'ref_ex': '03/31/2024', 'pay_day': 10},
     'EFC-B':  {'spread': 0.0569,  'reset': '01/30/2027', 'yahoo': 'EFC-PB',  'coupon': 0.0625,  'ref_ex': '03/31/2024', 'pay_day': 30}, 
     'EFC-C':  {'spread': 0.0546,  'reset': '04/30/2028', 'yahoo': 'EFC-PC',  'coupon': 0.08625, 'ref_ex': '03/31/2024', 'pay_day': 30},
     'RITM-D': {'spread': 0.0622,  'reset': '11/15/2026', 'yahoo': 'RITM-PD', 'coupon': 0.0700,  'ref_ex': '02/01/2024', 'pay_day': 15},
-    'RITM-F': {'spread': 0.0580,  'reset': '02/15/2031', 'yahoo': 'RITM-PF', 'coupon': 0.0875,  'ref_ex': '02/01/2024', 'pay_day': 15}, # FIXED
+    'RITM-F': {'spread': 0.0580,  'reset': '02/15/2031', 'yahoo': 'RITM-PF', 'coupon': 0.0875,  'ref_ex': '02/01/2024', 'pay_day': 15},
     'RWT-A':  {'spread': 0.06278, 'reset': '04/15/2028', 'yahoo': 'RWT-PA',  'coupon': 0.1000,  'ref_ex': '04/01/2024', 'pay_day': 15},
     'FTAIM':  {'spread': 0.05162, 'reset': '06/15/2028', 'yahoo': 'FTAIM',   'coupon': 0.0950,  'ref_ex': '03/01/2024', 'pay_day': 15}
 }
@@ -45,8 +45,9 @@ with col_b:
 inc_dec = increment_bps / 10000  
 today = datetime.now()
 
-# 3. CALCULATIONS (RAW NUMBERS ONLY)
+# 3. PROCESSING
 main_data = []
+sens_data = []
 target_rates = [(pivot_rate/100) + (i * inc_dec) for i in range(-2, 3)]
 
 for ticker, info in FTR_DATA.items():
@@ -66,30 +67,37 @@ for ticker, info in FTR_DATA.items():
 
     main_data.append({
         "Ticker": ticker,
-        "Coupon": info['coupon'],
+        "Coupon": info['coupon'] * 100, # Convert to 0-100 scale for clean format
         "Price": price,
         "Accrued": accrued_val,
+        "Full Qtr Div": (25 * info['coupon']) / 4,
         "Clean Price": clean_p,
-        "Curr Yield": curr_yield,
-        "Fwd Yield": fwd_yield,
-        "Spread": info['spread'],
+        "Curr Yield": curr_yield * 100,
+        "Fwd Yield": fwd_yield * 100,
+        "Spread": info['spread'] * 100,
         "Next Ex-Div": next_ex,
         "Next Pay": next_pay,
         "Next Reset": datetime.strptime(info['reset'], '%m/%d/%Y').date()
     })
 
-df = pd.DataFrame(main_data)
+    sens_row = {"Ticker": ticker}
+    for r in target_rates:
+        label = f"{r*100:.2f}% UST"
+        s_yield = ((r + info['spread']) * 25) / clean_p if clean_p > 0 else 0
+        sens_row[label] = s_yield * 100
+    sens_data.append(sens_row)
 
-# 4. RENDER WITH COLUMN CONFIG (FOR SORTING)
+# 4. RENDER
 st.subheader("Sortable Portfolio Dashboard")
 st.dataframe(
-    df,
+    pd.DataFrame(main_data),
     use_container_width=True,
     hide_index=True,
     column_config={
         "Coupon": st.column_config.NumberColumn(format="%.2f%%"),
         "Price": st.column_config.NumberColumn(format="$%.2f"),
         "Accrued": st.column_config.NumberColumn(format="$%.3f"),
+        "Full Qtr Div": st.column_config.NumberColumn(format="$%.3f"),
         "Clean Price": st.column_config.NumberColumn(format="$%.2f"),
         "Curr Yield": st.column_config.NumberColumn(format="%.2f%%"),
         "Fwd Yield": st.column_config.NumberColumn(format="%.2f%%"),
@@ -99,3 +107,10 @@ st.dataframe(
         "Next Reset": st.column_config.DateColumn(format="MM/DD/YYYY"),
     }
 )
+
+st.divider()
+
+st.subheader(f"Yield Sensitivity Analysis (Centered @ {pivot_rate:.2f}%)")
+df_sens = pd.DataFrame(sens_data)
+sens_config = {col: st.column_config.NumberColumn(format="%.2f%%") for col in df_sens.columns if col != "Ticker"}
+st.dataframe(df_sens, use_container_width=True, hide_index=True, column_config=sens_config)
