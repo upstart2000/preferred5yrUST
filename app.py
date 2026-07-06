@@ -21,7 +21,7 @@ def get_next_dates(ref_ex_str, pay_day_target):
     while current_ex <= today:
         current_ex += rd.relativedelta(months=3)
     next_pay = current_ex.replace(day=pay_day_target)
-    if next_pay < current_ex:
+    if next_pay < =current_ex:
         next_pay += rd.relativedelta(months=1)
     return current_ex.date(), next_pay.date()
 
