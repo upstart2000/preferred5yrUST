@@ -7,8 +7,8 @@ import dateutil.relativedelta as rd
 # --- 1. VERIFIED HARD DATA (NO ASSUMPTIONS) ---
 FTR_DATA = {
     'AGNCL':  {'spread': 0.0439,  'reset': '10/15/2027', 'yahoo': 'AGNCL',   'coupon': 0.0775,  'ref_ex': '03/31/2024', 'pay_day': 10},
-    'EFC-B':  {'spread': 0.0499,  'reset': '01/30/2027', 'yahoo': 'EFC-PB',  'coupon': 0.0625,  'ref_ex': '03/31/2024', 'pay_day': 30}, 
-    'EFC-C':  {'spread': 0.0513,  'reset': '04/30/2028', 'yahoo': 'EFC-PC',  'coupon': 0.08625, 'ref_ex': '03/31/2024', 'pay_day': 30},
+    'EFC-B':  {'spread': 0.0499,  'reset': '01/30/2027', 'yahoo': 'EFC-PB',  'coupon': 0.0625,  'ref_ex': '06/30/2026', 'pay_day': 30}, 
+    'EFC-C':  {'spread': 0.0513,  'reset': '04/30/2028', 'yahoo': 'EFC-PC',  'coupon': 0.08625, 'ref_ex': '06/30/2026', 'pay_day': 30},
     'RITM-D': {'spread': 0.0622,  'reset': '11/15/2026', 'yahoo': 'RITM-PD', 'coupon': 0.0700,  'ref_ex': '02/01/2024', 'pay_day': 15},
     'RITM-F': {'spread': 0.05009,  'reset': '02/15/2031', 'yahoo': 'RITM-PF', 'coupon': 0.0875,  'ref_ex': '02/01/2024', 'pay_day': 15},
     'RWT-A':  {'spread': 0.06278, 'reset': '04/15/2028', 'yahoo': 'RWT-PA',  'coupon': 0.1000,  'ref_ex': '04/01/2024', 'pay_day': 15},
